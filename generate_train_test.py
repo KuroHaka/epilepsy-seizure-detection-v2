@@ -16,6 +16,7 @@ train = [
     "chb04",
     "chb05",
     "chb06",
+    "chb09",
     "chb10",
     "chb11",
     "chb12",
@@ -30,9 +31,9 @@ train = [
     "chb21",
     "chb22",
     "chb23",
+    "chb24"
 ]
 
-valid = ["chb24","chb09"]
 test = ["chb07", "chb08"]
 
 drive_path = "C:/Users/Eugene Chen/Desktop/UNI/Project/Data/"
@@ -73,10 +74,6 @@ label_var = [n + "-var" for n in channels]
 label_max = [n + "-max" for n in channels]
 label_skw = [n + "-skw" for n in channels]
 label_krt = [n + "-krt" for n in channels]
-label_0_5_fft = [n + "-0_5_fft" for n in channels]
-label_6_15_fft = [n + "-6_15_fft" for n in channels]
-label_16_40_fft = [n + "-16_40_fft" for n in channels]
-label_41_80_fft = [n + "-41_80_fft" for n in channels]
 
 
 def progress_bar():
@@ -88,6 +85,21 @@ def progress_bar():
 def diff(lst1, lst2):
     return list(set(lst1) - set(lst2))
 
+def get_reduced_freq(target, batch_size, sampling_rate):
+    result = []
+    for channel in target:
+        layer = []
+        batch=[]
+        target_ft = abs(rfft(channel))
+        target_ft = [ x.real for x in target_ft]
+        for i in target_ft[0:(sampling_rate*40)+1]:
+            batch.append(i)
+            if len(batch)==batch_size:
+                batch_mean = sum(batch)/batch_size
+                layer.append(batch_mean)
+                batch=[]
+        result.append(layer)
+    return result
 
 def create_csv_file_from_patient(patient, file):
     global DONE
@@ -132,12 +144,9 @@ def create_csv_file_from_patient(patient, file):
             max_X = np.max(X, axis=2)
             skw_X = skew(X, axis=2)
             krt_X = kurtosis(X, axis=2)
-            X_rfft = np.real(rfft(X, axis=2))
-            std_X_rfft = np.std(X_rfft, axis=2)
-            var_X_rfft = np.var(X_rfft, axis=2)
-            max_X_rfft = np.max(X_rfft, axis=2)
-            skw_X_rfft = skew(X_rfft, axis=2)
-            krt_X_rfft = kurtosis(X_rfft, axis=2)
+            print(X.shape)
+            fft_X = [get_reduced_freq(x, 28, 14) for x in X]
+            print(len(fft_X))
             index_X = list(range(len(X)))
 
             std_Y = np.std(Y, axis=2)
@@ -145,30 +154,17 @@ def create_csv_file_from_patient(patient, file):
             max_Y = np.max(Y, axis=2)
             skw_Y = skew(Y, axis=2)
             krt_Y = kurtosis(Y, axis=2)
-            Y_rfft = np.real(rfft(Y, axis=2))
-            std_Y_rfft = np.std(Y_rfft, axis=2)
-            var_Y_rfft = np.var(Y_rfft, axis=2)
-            max_Y_rfft = np.max(Y_rfft, axis=2)
-            skw_Y_rfft = skew(Y_rfft, axis=2)
-            krt_Y_rfft = kurtosis(Y_rfft, axis=2)
+            fft_Y = [get_reduced_freq(y, 28, 14) for y in Y]
             index_Y = list(range(len(X), len(X) + len(Y)))
 
             df_X = pd.DataFrame(data=std_X, index=index_X, columns=label_std)
+            print(label_std)
             df_X = df_X.join(pd.DataFrame(data=var_X, index=index_X, columns=label_var))
             df_X = df_X.join(pd.DataFrame(data=max_X, index=index_X, columns=label_max))
             df_X = df_X.join(pd.DataFrame(data=skw_X, index=index_X, columns=label_skw))
             df_X = df_X.join(pd.DataFrame(data=krt_X, index=index_X, columns=label_krt))
             df_X = df_X.join(
-                pd.DataFrame(data=var_X_rfft, index=index_X, columns=label_var_rfft)
-            )
-            df_X = df_X.join(
-                pd.DataFrame(data=max_X_rfft, index=index_X, columns=label_max_rfft)
-            )
-            df_X = df_X.join(
-                pd.DataFrame(data=skw_X_rfft, index=index_X, columns=label_skw_rfft)
-            )
-            df_X = df_X.join(
-                pd.DataFrame(data=krt_X_rfft, index=index_X, columns=label_krt_rfft)
+                pd.DataFrame(data=fft_X, index=index_X, columns=['fft'])
             )
 
             df_Y = pd.DataFrame(data=std_Y, index=index_Y, columns=label_std)
@@ -176,20 +172,12 @@ def create_csv_file_from_patient(patient, file):
             df_Y = df_Y.join(pd.DataFrame(data=max_Y, index=index_Y, columns=label_max))
             df_Y = df_Y.join(pd.DataFrame(data=skw_Y, index=index_Y, columns=label_skw))
             df_Y = df_Y.join(pd.DataFrame(data=krt_Y, index=index_Y, columns=label_krt))
-            df_Y = df_Y.join(
-                pd.DataFrame(data=var_Y_rfft, index=index_Y, columns=label_var_rfft)
-            )
-            df_Y = df_Y.join(
-                pd.DataFrame(data=max_Y_rfft, index=index_Y, columns=label_max_rfft)
-            )
-            df_Y = df_Y.join(
-                pd.DataFrame(data=skw_Y_rfft, index=index_Y, columns=label_skw_rfft)
-            )
-            df_Y = df_Y.join(
-                pd.DataFrame(data=krt_Y_rfft, index=index_Y, columns=label_krt_rfft)
+            df_X = df_X.join(
+                pd.DataFrame(data=fft_Y, index=index_Y, columns=['fft'])
             )
 
             df = pd.concat([df_X, df_Y])
+            print(df)
             df = (df - df.mean()) / df.std()
             aux = pd.concat(
                 [
@@ -213,11 +201,11 @@ def create_csv_file_from_patient(patient, file):
 for target in train:
     patient = seizure_pointers[seizure_pointers["case"] == target]
     create_csv_file_from_patient(
-        patient, open("Code/data/train/" + target + ".csv", "w")
+        patient, open("data/train/" + target + ".csv", "w")
     )
 
 for target in test:
     patient = seizure_pointers[seizure_pointers["case"] == target]
     create_csv_file_from_patient(
-        patient, open("Code/data/test/" + target + ".csv", "w")
+        patient, open("data/test/" + target + ".csv", "w")
     )
