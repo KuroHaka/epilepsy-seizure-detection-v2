@@ -17,6 +17,7 @@ train = [
     "chb04",
     "chb05",
     "chb06",
+    "chb09",
     "chb10",
     "chb11",
     "chb13",
@@ -217,6 +218,7 @@ def create_df_file_from_patient(patient, file):
 
             # computing features for seizure
             df_X = pd.DataFrame(data=std_X, index=index_X, columns=label_std)
+            print(label_std)
             df_X = df_X.join(pd.DataFrame(data=var_X, index=index_X, columns=label_var))
             df_X = df_X.join(pd.DataFrame(data=max_X, index=index_X, columns=label_max))
             df_X = df_X.join(pd.DataFrame(data=std_X_rfft, index=index_X, columns=label_std_rfft))
