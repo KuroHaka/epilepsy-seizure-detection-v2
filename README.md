@@ -31,11 +31,9 @@ source .venv/bin/activate   # Linux/WSL
 
 ## Dataset
 
-Download the [CHB-MIT dataset](https://physionet.org/content/chbmit/1.0.0/) and update the `drive_path` variable at the top of each script to point to your local copy:
+Download the [CHB-MIT dataset](https://physionet.org/content/chbmit/1.0.0/) and extract it into the folder /raw_data/:
+alg o get the seizure data.xlsx -> contains the seizure notations by physicians and place it into the /raw_data/
 
-```python
-drive_path = "/path/to/chb-mit/"  # update in generate_train_test.py, merge_train_test.py, plotter.py
-```
 
 ## Workflow
 

@@ -7,8 +7,8 @@ __pycache__/
 *.pickle
 *.pt
 
-# Data files
-/raw_data/
+# RAW data files
+/raw_data/chb-mit-scalp-eeg-database-1.0.0/
 
 # C extensions
 *.so
