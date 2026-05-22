@@ -4,7 +4,7 @@ import os, pickle
 
 #train
 dataframes = []
-directory = 'data\\train'
+directory = 'data/train'
 for filename in os.listdir(directory):
     with open(os.path.join(directory, filename), 'rb') as f:
         data = pickle.load(f)
@@ -15,12 +15,12 @@ for filename in os.listdir(directory):
         dataframes.append(data)
 
 dataframes = pd.concat(dataframes).reset_index().drop(columns=["index"])
-with open('data\\train.pickle', 'wb') as f:
+with open('data/train.pickle', 'wb') as f:
     pickle.dump(dataframes, f)
 
 #test                                                                                           
 dataframes = []
-directory = 'data\\test'
+directory = 'data/test'
 for filename in os.listdir(directory):
     with open(os.path.join(directory, filename), 'rb') as f:
         data = pickle.load(f)
@@ -31,5 +31,5 @@ for filename in os.listdir(directory):
         dataframes.append(data)
 
 dataframes = pd.concat(dataframes).reset_index().drop(columns=["index"])
-with open('data\\test.pickle', 'wb') as f:
+with open('data/test.pickle', 'wb') as f:
     pickle.dump(dataframes, f)

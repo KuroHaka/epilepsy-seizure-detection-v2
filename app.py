@@ -1,14 +1,8 @@
 import streamlit as st
-from scipy.fft import rfft
 import matplotlib
-import matplotlib.pyplot as plt
-import mne, pickle, torch
-import pandas as pd
-import os
+import subprocess
 
 matplotlib.use('Qt5Agg', force=True)
-
-
 
 st.write("""
 # Automatic seizure detection
@@ -166,4 +160,4 @@ if model == 'FFNN' or model == 'CNN+FFNN':
     threshold = st.slider('Threshold', -0.5, 1.5, 0.5, 0.01)
 
 if st.button('Autodetect'):
-    os.system('python plotter.py ' + option + ' ' + str(model) + ' ' + str(threshold))
+    subprocess.run(['python', 'plotter.py', option, model, str(threshold)])

@@ -9,6 +9,8 @@ option = sys.argv[1]
 model = sys.argv[2]
 threshold = sys.argv[3]
 
+drive_path = "raw_data/"
+
 def get_reduced_freq(target, batch_size, sampling_rate):
     result = []
     for channel in target:
@@ -126,7 +128,6 @@ class CNNFFNN(nn.Module):
 
 target = option.split('_')[0]
 file = option+".edf"
-drive_path = "C:/Users/Eugene Chen/Desktop/UNI/Project/Data/"
 seizure_pointers = pd.read_excel(drive_path + "seizure data.xlsx", index_col=0)
 seizure_pointers["index"] = (
     seizure_pointers["seizure_file"]
@@ -233,7 +234,7 @@ elif model == 'FFNN':
                 detected.append(index)
 
 elif model == 'SVM':
-    model = pickle.load(open('Models/svc_model.pt', 'rb'))
+    model = pickle.load(open('Models/svm_model.pt', 'rb'))
     df = df.drop(columns=['stft'])
     for index, item in df.iterrows():
         predicted = model.predict(item.values.reshape(1,-1))[0]

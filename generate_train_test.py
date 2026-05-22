@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
-from scipy.fft import rfft, rfftfreq
-from scipy.stats import skew, kurtosis
-import csv, mne, math, pickle, json
+from scipy.fft import rfft
+import mne, pickle
 from IPython.display import clear_output
 
 # constants
@@ -37,7 +36,7 @@ train = [
 test = ["chb07", "chb08", "chb09"]
 
 # drive path to the dataset (should change it if you want to try the code)
-drive_path = "C:/Users/Eugene Chen/Desktop/UNI/Project/Data/"
+drive_path = "raw_data/"
 seizure_pointers = pd.read_excel(drive_path + "seizure data.xlsx", index_col=0)
 seizure_pointers["index"] = (
     seizure_pointers["seizure_file"]
@@ -156,9 +155,9 @@ def create_df_file_from_patient(patient, file):
         edf_data = mne.io.read_raw_edf(
             drive_path
             + "chb-mit-scalp-eeg-database-1.0.0/"
-            + sesion["case"][0]
+            + sesion["case"].iloc[0]
             + "/"
-            + sesion["seizure_file"][0]
+            + sesion["seizure_file"].iloc[0]
             + ".edf/",
             verbose=50,
         )
