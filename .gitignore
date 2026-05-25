@@ -3,9 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# models
+# models and data files
 *.pickle
 *.pt
+*.npz
 
 # RAW data files
 /raw_data/chb-mit-scalp-eeg-database-1.0.0/
@@ -110,9 +111,9 @@ celerybeat.pid
 
 # Environments
 .env
-.venv
+.venv*
 env/
-venv/
+venv*/
 ENV/
 env.bak/
 venv.bak/
