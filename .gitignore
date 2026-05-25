@@ -5,7 +5,6 @@ __pycache__/
 
 # models and data files
 *.pickle
-*.pt
 *.npz
 *.npy
 
