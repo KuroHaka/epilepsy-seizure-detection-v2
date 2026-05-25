@@ -5,7 +5,6 @@ from pathlib import Path
 import numpy as np
 
 def convert_npz_to_mmap(npz_paths, out_dir):
-    """Run once — converts your .npz files to fast .npy mmaps."""
     out_dir = Path(out_dir)
     out_dir.mkdir(exist_ok=True)
     for path in npz_paths:
@@ -45,19 +44,6 @@ class EEGDataset(Dataset):
             self.labels[file_idx][epoch_idx].copy(),
         )
 
-
-# ─────────────────────────────────────────────
-#  EEG LSTM Model
-#  Input:  (batch, 17, 1536)
-#  Output: (batch, 2)
-#
-#  Architecture:
-#    1. Treat each timepoint as a sequence step
-#       with 17 channel values as features
-#    2. Transpose → (batch, 1536, 17)
-#    3. LSTM over time → hidden state
-#    4. Take last hidden state → classifier
-# ─────────────────────────────────────────────
 class EEGLSTM(nn.Module):
     """
     Bidirectional LSTM for EEG seizure detection.
@@ -103,15 +89,11 @@ class EEGLSTM(nn.Module):
         )
 
     def forward(self, x):
-        x = x.permute(0, 2, 1) # (batch, channels/features, time points) → (batch, time points, channels/features)
+        x = x.permute(0, 2, 1) # (batch, channels/features, time points) -> (batch, time points, channels/features)
         out, _ = self.lstm(x) 
         x = out.mean(dim=1)
         return self.classifier(x)
 
-
-# ─────────────────────────────────────────────
-#  Training loop
-# ─────────────────────────────────────────────
 def train_one_epoch(model, loader, optimizer, criterion, device, scheduler=None):
     model.train()
     total_loss, correct, total = 0, 0, 0
@@ -134,10 +116,6 @@ def train_one_epoch(model, loader, optimizer, criterion, device, scheduler=None)
 
     return total_loss / len(loader), correct / total
 
-
-# ─────────────────────────────────────────────
-#  Evaluation loop
-# ─────────────────────────────────────────────
 @torch.no_grad()
 def evaluate(model, loader, criterion, device):
     model.eval()
@@ -167,7 +145,7 @@ def evaluate(model, loader, criterion, device):
     precision = tp / (tp + fp + 1e-8)
     recall    = tp / (tp + fn + 1e-8)
     f1        = 2 * precision * recall / (precision + recall + 1e-8)
-    sensitivity = tp / (tp + fn + 1e-8)   # same as recall — true positive rate
+    sensitivity = tp / (tp + fn + 1e-8)   # same as recall - true positive rate
     specificity = tn / (tn + fp + 1e-8)   # true negative rate
 
     return {
@@ -192,8 +170,8 @@ def evaluate_with_threshold(model, loader, criterion, device, threshold=0.5):
         loss   = criterion(logits, labels)
 
         total_loss += loss.item()
-        probs       = torch.softmax(logits, dim=-1)[:, 1]   # changed
-        preds       = (probs > threshold).long()             # changed
+        probs       = torch.softmax(logits, dim=-1)[:, 1]
+        preds       = (probs > threshold).long()
         correct    += (preds == labels).sum().item()
         total      += labels.size(0)
         all_preds.append(preds.cpu())
