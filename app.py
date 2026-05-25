@@ -1,9 +1,9 @@
+import sys
 import streamlit as st
 import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import numpy as np
-from plotter import process_eeg
+import subprocess
+
+matplotlib.use('Qt5Agg', force=True)
 
 st.write("""
 # Automatic seizure detection
@@ -161,75 +161,4 @@ if model == 'FFNN' or model == 'CNN+FFNN':
     threshold = st.slider('Threshold', -0.5, 1.5, 0.5, 0.01)
 
 if st.button('Autodetect'):
-    with st.spinner('Processing EEG data...'):
-        result = process_eeg(option, model, str(threshold))
-
-    raw_data = result['raw_data']
-    sfreq = result['sfreq']
-    ch_names = result['ch_names']
-    seizure_start = result['seizure_start']
-    seizure_duration = result['seizure_duration']
-    detected = result['detected']
-
-    n_channels = len(ch_names)
-    total_samples = raw_data.shape[1]
-    times = np.arange(total_samples) / sfreq
-
-    window_duration = 50
-    view_start = max(0, seizure_start[0] - 5)
-    view_end = view_start + window_duration
-    start_idx = int(view_start * sfreq)
-    end_idx = min(int(view_end * sfreq), total_samples)
-    t = times[start_idx:end_idx]
-    data_window = raw_data[:, start_idx:end_idx]
-
-    scale = 250e-6
-    offsets = np.arange(n_channels) * scale
-
-    # Ground truth plot
-    fig_gt, ax_gt = plt.subplots(figsize=(14, 8))
-    for i in range(n_channels):
-        ax_gt.plot(t, data_window[i] + offsets[i], color='green', linewidth=0.4)
-    for onset, dur in zip(seizure_start, seizure_duration):
-        ax_gt.axvspan(onset, onset + dur, alpha=0.25, color='orange', label='Ground truth')
-    ax_gt.set_yticks(offsets)
-    ax_gt.set_yticklabels(ch_names, fontsize=7)
-    ax_gt.set_xlabel('Time (s)')
-    ax_gt.set_title('EEG — Ground Truth Seizure')
-    ax_gt.set_xlim(view_start, view_end)
-    handles, labels = ax_gt.get_legend_handles_labels()
-    if handles:
-        ax_gt.legend([handles[0]], [labels[0]])
-    plt.tight_layout()
-
-    st.subheader('Ground Truth')
-    st.pyplot(fig_gt)
-    plt.close(fig_gt)
-
-    # Prediction plot
-    fig_pred, ax_pred = plt.subplots(figsize=(14, 8))
-    for i in range(n_channels):
-        ax_pred.plot(t, data_window[i] + offsets[i], color='steelblue', linewidth=0.4)
-    for onset, dur in zip(seizure_start, seizure_duration):
-        ax_pred.axvspan(onset, onset + dur, alpha=0.15, color='orange', label='Ground truth')
-    for epoch_idx in detected:
-        epoch_start = epoch_idx * 1
-        epoch_end = epoch_start + 2
-        if epoch_start >= view_start and epoch_start <= view_end:
-            ax_pred.axvspan(epoch_start, epoch_end, alpha=0.3, color='red', label='Predicted')
-    ax_pred.set_yticks(offsets)
-    ax_pred.set_yticklabels(ch_names, fontsize=7)
-    ax_pred.set_xlabel('Time (s)')
-    ax_pred.set_title('EEG — Model Prediction')
-    ax_pred.set_xlim(view_start, view_end)
-    handles, labels = ax_pred.get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    if by_label:
-        ax_pred.legend(by_label.values(), by_label.keys())
-    plt.tight_layout()
-
-    st.subheader('Prediction')
-    st.pyplot(fig_pred)
-    plt.close(fig_pred)
-
-    st.success(f'Detected {len(detected)} seizure epochs')
+    subprocess.run([sys.executable, 'plotter.py', option, model, str(threshold)])
