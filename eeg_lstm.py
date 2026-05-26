@@ -117,49 +117,7 @@ def train_one_epoch(model, loader, optimizer, criterion, device, scheduler=None)
     return total_loss / len(loader), correct / total
 
 @torch.no_grad()
-def evaluate(model, loader, criterion, device):
-    model.eval()
-    total_loss, correct, total = 0, 0, 0
-    all_preds, all_labels = [], []
-
-    for epochs, labels in loader:
-        epochs, labels = epochs.to(device), labels.to(device)
-        logits = model(epochs)
-        loss   = criterion(logits, labels)
-
-        total_loss += loss.item()
-        preds       = logits.argmax(dim=1)
-        correct    += (preds == labels).sum().item()
-        total      += labels.size(0)
-        all_preds.append(preds.cpu())
-        all_labels.append(labels.cpu())
-
-    all_preds  = torch.cat(all_preds)
-    all_labels = torch.cat(all_labels)
-
-    tp = ((all_preds == 1) & (all_labels == 1)).sum().float()
-    fp = ((all_preds == 1) & (all_labels == 0)).sum().float()
-    fn = ((all_preds == 0) & (all_labels == 1)).sum().float()
-    tn = ((all_preds == 0) & (all_labels == 0)).sum().float()
-
-    precision = tp / (tp + fp + 1e-8)
-    recall    = tp / (tp + fn + 1e-8)
-    f1        = 2 * precision * recall / (precision + recall + 1e-8)
-    sensitivity = tp / (tp + fn + 1e-8)   # same as recall - true positive rate
-    specificity = tn / (tn + fp + 1e-8)   # true negative rate
-
-    return {
-        "loss":      total_loss / len(loader),
-        "accuracy":  correct / total,
-        "precision": precision.item(),
-        "recall":    recall.item(),
-        "f1":        f1.item(),
-        "sensitivity": sensitivity.item(),
-        "specificity": specificity.item(),
-    }
-
-@torch.no_grad()
-def evaluate_with_threshold(model, loader, criterion, device, threshold=0.5):
+def evaluate(model, loader, criterion, device, threshold=0.5):
     model.eval()
     total_loss, correct, total = 0, 0, 0
     all_preds, all_labels = [], []
